@@ -186,7 +186,7 @@ void send_inactivity_alarms(const std::string& machine_id/*const std::chrono::se
         for (const auto& sensor : sensors) {        
             mtx.lock();
 
-            int last_read = string_to_miliseconds(sensor.timestamp[1]);
+            int last_read = string_to_time_t(sensor.timestamp[1]);
             int time_now = std::chrono::time_point_cast<std::chrono::seconds>(std::chrono::system_clock::now()).time_since_epoch().count();
 
             // Verifique se o tempo limite de inatividade foi ultrapassado.
@@ -213,7 +213,7 @@ void data_slew_rate(const std::string& machine_id, const std::string& sensor_id)
     std::string timestamp_old = sensors[sens].timestamp[0], timestamp_new = sensors[sens].timestamp[1];
     int value_old = sensors[sens].value[0], value_new = sensors[sens].value[1];
 
-    int interval = string_to_miliseconds(timestamp_new) - string_to_miliseconds(timestamp_old);
+    int interval = string_to_time_t(timestamp_new) - string_to_time_t(timestamp_old);
     int slew_rate = (value_new - value_old) / interval;
 
     post_metric(machine_id, sensors[sens].sensor_id, "Slew rate data: ", slew_rate);
