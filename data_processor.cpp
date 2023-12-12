@@ -30,6 +30,8 @@ std::mutex mtx;
 
     std::vector<Sensors> sensors;
 
+    Sensors CPU;
+    
     struct Machines
     {
         std::string machine_id;
@@ -112,16 +114,13 @@ void post_metric(const std::string& machine_id, const std::string& sensor_id, co
         exit(EXIT_FAILURE);
     }*/
     
-
-    std::string post_metric = machine_id + "." + sensor_id;
+    std::string post_metric = "machines." + machine_id + "." + sensor_id;
     std::stringstream metrica;
-    metrica << "  " << value << " " << string_to_time_t(timestamp_str);
-    
+    metrica << post_metric << " " << value << " " << string_to_time_t(timestamp_str) << "\n";
 
-    ssize_t send_result = send(novo_socket,
-                               post_metric.c_str(), // Ponteiro para a string de dados métricos.
-                               post_metric.size(), // Tamanho da string de dados métricos.
-                               0);
+    std::string dados = metrica.str();
+    ssize_t send_result = send(novo_socket, dados.c_str(), dados.size(), 0);
+    
     if (send_result == -1) 
     {
         // Erro ao aceitar a conexão
@@ -164,22 +163,6 @@ void connect_to_mqtt_broker(mqtt::async_client& client, const std::string& broke
 }
 
 void send_inactivity_alarms(const std::string& machine_id/*const std::chrono::seconds& inactivity_timeout*/) {
-    // Armazene o timestamp da última leitura recebida para cada sensor.
-    /*    std::map<std::string, std::chrono::time_point<std::chrono::system_clock>> last_reading_timestamps;
-
-        
-        // Verifique se o tempo limite de inatividade foi ultrapassado para qualquer sensor.
-        for (const auto& sensor : sensors) {
-            // Obtenha o timestamp da última leitura recebida.
-            auto last_reading_timestamp = last_reading_timestamps[sensor.sensor_id];
-
-            // Verifique se o tempo limite de inatividade foi ultrapassado.
-            if (std::chrono::system_clock::now() - last_reading_timestamp > inactivity_timeout) {
-                // Envie um alarme para o Graphite.
-                post_metric(machine_id, "alarms.inactive", sensor.sensor_id, 1);
-            }
-        }
-    */
 
     while(1)
     {
@@ -216,7 +199,7 @@ void data_slew_rate(const std::string& machine_id, const std::string& sensor_id)
     int interval = string_to_time_t(timestamp_new) - string_to_time_t(timestamp_old);
     int slew_rate = (value_new - value_old) / interval;
 
-    post_metric(machine_id, sensors[sens].sensor_id, "Slew rate data: ", slew_rate);
+    post_metric(machine_id, sensors[sens].sensor_id, "Slew_rate_data: ", slew_rate);
     mtx.unlock();
 }
 
@@ -240,12 +223,10 @@ void post_data_memoria(const std::string& machine_id){
 int main(int argc, char* argv[]) {
 
     //Iniciando vetor de sensores
-    sensors.push_back({"CPU_Percentage_Used", "percent", 30, {0, 0}, {0, 0}});
-    sensors.push_back({"Memory_Percentage_Used", "percent", 25, {0, 0}, {0, 0}});
-
+    sensors.push_back({"CPU_Percentage_Used", "percent", 30, {"", ""}, {0, 0}});
+    sensors.push_back({"Memory_Percentage_Used", "percent", 25, {"", ""}, {0, 0}});
     std::string clientId = "clientId";
     mqtt::async_client client(BROKER_ADDRESS, clientId);
-
 
     // Create an MQTT callback.
     class callback : public virtual mqtt::callback {
