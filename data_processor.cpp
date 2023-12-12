@@ -44,18 +44,6 @@ std::time_t string_to_time_t(const std::string& time_string) {
 }
 
 
-int string_to_miliseconds(const std::string& timestamp_str)
-{
-    int milisseconds = 0;
-
-    /**
-      *Montar a função
-      *Não sei com vem a string
-    */
-
-    return milisseconds;
-}
-
 void post_metric(const std::string& machine_id, const std::string& sensor_id, const std::string& timestamp_str, const int value) {
     // Create a Graphite message.
    // graphite::Message message(machine_id + "." + sensor_id, value, timestamp_seconds);
