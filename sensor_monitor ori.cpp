@@ -7,15 +7,9 @@
 #include "json.hpp" // json handling
 #include "mqtt/client.h" // paho mqtt
 #include <iomanip>
-#include <random>
 
 #define QOS 1
 #define BROKER_ADDRESS "tcp://localhost:1883"
-
-std::random_device rd;
-std::mt19937 mt(rd());
-std::uniform_int_distribution<int> choose_sensor(0, 1);
-std::uniform_int_distribution<int> sensor_simulate(0, 100);
 
 int main(int argc, char* argv[]) {
     std::string clientId = "sensor-monitor";
@@ -49,18 +43,15 @@ int main(int argc, char* argv[]) {
         std::string timestamp = ss.str();
 
         // Generate a random value.
-        int value = sensor_simulate(mt);
+        int value = rand();
 
-        std::string sensor_id;
-        if(choose_sensor(mt) < 0.5) sensor_id = "001";
-        else sensor_id = "002";
         // Construct the JSON message.
         nlohmann::json j;
         j["timestamp"] = timestamp;
         j["value"] = value;
 
         // Publish the JSON message to the appropriate topic.
-        std::string topic = "/sensors/" + machineId + "/" + sensor_id;
+        std::string topic = "/sensors/" + machineId + "/rand";
         mqtt::message msg(topic, j.dump(), QOS, false);
         std::clog << "message published - topic: " << topic << " - message: " << j.dump() << std::endl;
         client.publish(msg);
